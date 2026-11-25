@@ -168,6 +168,19 @@ src/
 
 Layering rule: `route → validate → controller → service → model`. Route handlers do not contain database logic.
 
+## Deploying the API to Vercel
+
+`vercel.json` rewrites every path to the serverless entry point `api/index.ts`, which reuses one Express app and one MongoDB connection across warm invocations. The build command runs `npm run build`.
+
+1. Import this `server/` directory as the Vercel project (set **Root Directory** to `server` in a monorepo).
+2. Add the variables from `.env.example` in the Vercel dashboard. At minimum: `MONGODB_URI` (Atlas M0), `MONGODB_DB_NAME`, `JWT_SECRET`, `CORS_ORIGINS` (include the deployed UI domain), and the AI provider variables (`AI_PROVIDER`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` — or `AI_PROVIDER=mock`). Cloudinary variables are needed only for media uploads.
+3. Allow Vercel's egress IPs in Atlas Network Access (or `0.0.0.0/0`) — ranges change, so a fixed IP is unreliable.
+4. `functions.maxDuration` is 30s to allow AI timeout/retry paths.
+
+> MongoDB transactions require a replica set (Atlas M0 works). Vercel limits request bodies to ~4.5 MB, so keep `MAX_UPLOAD_MB` at or below 4 or use direct-to-provider uploads. The mock S3 adapter writes to `/tmp` on Vercel (ephemeral); use `STORAGE_LONGTERM_MODE=s3` with AWS credentials for durable storage.
+
+Local check of the exact serverless handler: `npx tsx` a script that imports `api/index.ts` and passes Node `req`/`res` to the default export, or run `npx vercel dev` after linking the project.
+
 ## Troubleshooting
 
 - **Boot exits with "Invalid or missing environment variables"** — copy `.env.example` to `.env` and fill the required values.

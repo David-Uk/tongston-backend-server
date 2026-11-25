@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
 import compression from 'compression';
 import cors from 'cors';
-import express, { type Express } from 'express';
-import helmet from 'helmet';
+import express, { type Express, type RequestHandler } from 'express';
 import { pinoHttp } from 'pino-http';
 import type { Config } from './config/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
@@ -20,6 +20,10 @@ import { createStorageProviders } from './providers/storage/index.js';
 import { docsRouter } from './routes/docs.js';
 import { healthRouter } from './routes/health.js';
 import { logger } from './utils/logger.js';
+
+// Loaded via require so Vercel's TypeScript compiler doesn't choke on helmet's CJS types.
+const localRequire = createRequire(process.cwd() + '/');
+const helmet = localRequire('helmet') as (options?: Record<string, unknown>) => RequestHandler;
 
 /** Builds the Express instance without listening — kept separate for tests. */
 export function createApp(config: Config): Express {

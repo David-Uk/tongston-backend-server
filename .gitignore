@@ -17,6 +17,9 @@ build
 coverage
 *.tsbuildinfo
 
+# Vercel CLI local state (may contain downloaded env vars)
+.vercel
+
 # Local environment files (secrets — never commit)
 .env
 .env.*
@@ -36,3 +39,6 @@ coverage
 # Runtime artifacts
 uploads
 tmp
+
+.vercel
+.env*

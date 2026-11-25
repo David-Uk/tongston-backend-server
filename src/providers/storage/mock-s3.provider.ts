@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import type { StorageProvider, StoredObject } from './storage.provider.js';
 
-const ROOT = path.resolve(process.cwd(), 'tmp', 'mock-s3');
+// Vercel's filesystem is read-only except /tmp; local dev uses the project dir.
+const ROOT = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'mock-s3')
+  : path.resolve(process.cwd(), 'tmp', 'mock-s3');
 
 const EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
