@@ -1,6 +1,6 @@
 /**
  * OpenAPI 3.1 rendering of ../api.md (repo root) — the spec is the source of truth.
- * Auth, health, content, AI, tokens and admin are live; media/Web3 are planned.
+ * Auth, health, content, AI, tokens, admin and media are live; Web3 is planned.
  */
 const bearer = [{ bearerAuth: [] }];
 
@@ -49,7 +49,7 @@ export const openApiDocument = {
     title: 'T-World Module Service API',
     version: '0.1.0',
     description:
-      'Content, AI summarization, token rewards and mock Web3. Auth, health, content, AI, token and admin endpoints are live; media and Web3 describe the target contract from api.md for later phases. All errors use the standard envelope: `{ error: { code, message, details, requestId } }`.',
+      'Content, AI summarization, token rewards and mock Web3. Auth, health, content, AI, token, admin and media endpoints are live; Web3 describes the target contract from api.md for a later phase. All errors use the standard envelope: `{ error: { code, message, details, requestId } }`.',
   },
   servers: [
     {
@@ -64,7 +64,7 @@ export const openApiDocument = {
     { name: 'AI', description: 'AI summarization via OpenRouter' },
     { name: 'Tokens', description: 'Token balance, hash-chained ledger and mock conversions' },
     { name: 'Admin', description: 'Admin-only user, grant and ledger verification routes' },
-    { name: 'Media', description: 'Planned — Phase 5' },
+    { name: 'Media', description: 'Cloudinary upload and mock-S3 promotion' },
     { name: 'Web3', description: 'Planned — stretch' },
     { name: 'Operations', description: 'Health, readiness and these docs' },
   ],
@@ -661,12 +661,28 @@ export const openApiDocument = {
         responses: { 200: { description: 'HTML documentation page' } },
       },
     },
+    '/swagger': {
+      get: {
+        tags: ['Operations'],
+        summary: 'Interactive Swagger UI (same OpenAPI document)',
+        security: [],
+        responses: { 200: { description: 'HTML documentation page' } },
+      },
+    },
     '/openapi.json': {
       get: {
         tags: ['Operations'],
         summary: 'Raw OpenAPI document',
         security: [],
         responses: { 200: response('OpenAPI 3.1 document', { type: 'object' }) },
+      },
+    },
+    '/postman.json': {
+      get: {
+        tags: ['Operations'],
+        summary: 'Postman v2.1 collection',
+        security: [],
+        responses: { 200: response('Postman collection', { type: 'object' }) },
       },
     },
   },

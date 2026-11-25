@@ -2,7 +2,9 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { apiReference } from '@scalar/express-api-reference';
 import express, { Router } from 'express';
+import swaggerUi from 'swagger-ui-express';
 import { openApiDocument } from '../docs/openapi.js';
+import { postmanCollection } from '../docs/postman.js';
 
 export const docsRouter = Router();
 
@@ -27,3 +29,15 @@ docsRouter.get(
     spec: { url: '/openapi.json' },
   }),
 );
+
+/** Swagger UI alternative, served from local assets. */
+docsRouter.use('/swagger', swaggerUi.serve);
+docsRouter.get(
+  '/swagger',
+  swaggerUi.setup(openApiDocument, { customSiteTitle: 'T-World Module Service API' }),
+);
+
+/** Postman v2.1 collection derived from the same spec. */
+docsRouter.get('/postman.json', (_req, res) => {
+  res.json(postmanCollection);
+});

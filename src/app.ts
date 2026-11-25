@@ -11,10 +11,12 @@ import { aiRunsRouter } from './modules/ai/ai-runs.router.js';
 import { createAiRouter } from './modules/ai/ai.router.js';
 import { authRouter } from './modules/auth/auth.router.js';
 import { contentRouter } from './modules/content/content.router.js';
+import { createMediaRouter } from './modules/media/media.router.js';
 import { adminRouter } from './modules/tokens/admin.router.js';
 import { createTokensRouter } from './modules/tokens/tokens.router.js';
 import { createAiProvider } from './providers/ai/index.js';
 import { createChainClient } from './providers/chain/index.js';
+import { createStorageProviders } from './providers/storage/index.js';
 import { docsRouter } from './routes/docs.js';
 import { healthRouter } from './routes/health.js';
 import { logger } from './utils/logger.js';
@@ -48,23 +50,22 @@ export function createApp(config: Config): Express {
     next();
   });
 
-  // Scalar is served from this app but injects inline scripts/styles, so /docs
-  // needs a slightly relaxed CSP. Mounted before the strict global helmet.
-  app.use(
-    '/docs',
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:'],
-          fontSrc: ["'self'", 'data:'],
-          connectSrc: ["'self'"],
-        },
+  // Scalar/Swagger inject inline scripts and styles, so their pages need a
+  // slightly relaxed CSP. Mounted before the strict global helmet.
+  const docsHelmet = helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+        fontSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
       },
-    }),
-  );
+    },
+  });
+  app.use('/docs', docsHelmet);
+  app.use('/swagger', docsHelmet);
   app.use(docsRouter);
 
   app.use(helmet());
@@ -81,6 +82,8 @@ export function createApp(config: Config): Express {
   app.use('/ai-runs', aiRunsRouter);
   app.use('/tokens', createTokensRouter(config, createChainClient(config)));
   app.use('/admin', adminRouter);
+  const storage = createStorageProviders(config);
+  app.use('/media', createMediaRouter(config, storage.shortTerm, storage.longTerm));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -108,15 +108,23 @@ For deterministic runs without an API key, set `AI_PROVIDER=mock`.
 
 Exchange rates are config-driven (`RATE_TOKENS_PER_MOCK_USDT`, `RATE_TOKENS_PER_MOCK_ETH`, `MIN_CONVERT_AMOUNT`). Convert and withdraw accept an optional `Idempotency-Key` header; a repeated key returns `409`. The mock chain client returns deterministic `0x`-prefixed 32-byte hashes, so a real adapter can replace it later. Every ledger row stores `balanceAfter` plus `prevHash`/`hash`; there are no update or delete routes.
 
+## Media storage
+
+`POST /media/upload` accepts `multipart/form-data` with a `file` field (MIME allow-list and `MAX_UPLOAD_MB` from env) and stores it in your **live Cloudinary account**. Fill all three `CLOUDINARY_*` variables in `.env`; uploads return `502` until the secret is set.
+
+`POST /media/:id/promote` streams the Cloudinary file into long-term storage, updates the asset to `PROMOTED`, then deletes the temporary Cloudinary copy. With `STORAGE_LONGTERM_MODE=mock` (default) the long-term store is a local directory (`tmp/mock-s3/`), so no AWS credentials are needed. Promotion is idempotent; a failure leaves the asset `TEMP` with its original intact and returns `502`. `STORAGE_LONGTERM_MODE=s3` selects the real AWS S3 adapter when credentials are available.
+
 ## API documentation
 
 | URL                                  | What it is                                                       |
 | ------------------------------------ | ---------------------------------------------------------------- |
 | `http://localhost:4000/docs`         | Scalar interactive API reference (try requests from the browser) |
+| `http://localhost:4000/swagger`      | Swagger UI alternative using the same spec                       |
 | `http://localhost:4000/openapi.json` | The raw OpenAPI 3.1 document                                     |
+| `http://localhost:4000/postman.json` | Postman v2.1 collection (also exported to `../docs/`)            |
 | `../api.md`                          | The written contract the spec is generated from                  |
 
-The Scalar UI bundle is served by this app, so `/docs` and `/openapi.json` work fully offline. Auth, health, content and AI endpoints are live; the token, admin, media and Web3 groups describe the target contract for later phases.
+Both UI bundles are served by this app, so `/docs`, `/swagger`, `/openapi.json` and `/postman.json` work offline. Import the Postman collection and set the `token` variable with a JWT from `POST /auth/login`; `baseUrl` defaults to `http://localhost:4000`. Auth, health, content, AI, token, admin and media endpoints are live; Web3 describes the target contract for a later phase.
 
 ## Scripts
 
@@ -148,9 +156,11 @@ src/
   modules/ai/         AI runs, prompt versioning, orchestration, routers
   modules/auth/       User model, Zod schemas, service, router
   modules/content/    Content model, Zod schemas, repository, service, router
+  modules/media/      Media assets, upload/promote service and router
   modules/tokens/     Ledger/hash chain, conversions, rates, token and admin routers
   providers/ai/       OpenRouter and mock adapters behind one interface
   providers/chain/    Mock smart-contract client behind one interface
+  providers/storage/  Cloudinary, S3 and mock-S3 providers behind one interface
   routes/             health and docs routers
   types/              Express request augmentation
   utils/              AppError classes, Pino logger
