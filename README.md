@@ -117,6 +117,7 @@ src/
   docs/               OpenAPI 3.1 document
   middleware/         request validation, auth/RBAC, rate limit, errors
   modules/auth/       User model, Zod schemas, service, router
+  modules/content/    Content model, Zod schemas, repository, service, router
   routes/             health and docs routers
   types/              Express request augmentation
   utils/              AppError classes, Pino logger

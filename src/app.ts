@@ -8,6 +8,7 @@ import type { Config } from './config/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 import { createGlobalLimiter } from './middleware/rateLimit.js';
 import { authRouter } from './modules/auth/auth.router.js';
+import { contentRouter } from './modules/content/content.router.js';
 import { docsRouter } from './routes/docs.js';
 import { healthRouter } from './routes/health.js';
 import { logger } from './utils/logger.js';
@@ -68,6 +69,7 @@ export function createApp(config: Config): Express {
 
   app.use(healthRouter);
   app.use('/auth', authRouter);
+  app.use('/content', contentRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
