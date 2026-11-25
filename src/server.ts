@@ -20,10 +20,23 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info({ signal }, 'Shutting down');
 
+    // Don't hang forever on a stuck connection or a long-lived keep-alive.
+    const forceExit = setTimeout(() => {
+      logger.error('Shutdown timed out; forcing exit');
+      process.exit(1);
+    }, 10_000);
+    forceExit.unref();
+
     server.close(async () => {
-      await disconnectDB();
+      try {
+        await disconnectDB();
+      } catch (error) {
+        logger.error({ err: error }, 'Failed to close database connection');
+      }
+      clearTimeout(forceExit);
       process.exit(0);
     });
+    server.closeAllConnections();
   };
 
   process.on('SIGTERM', () => shutdown('SIGTERM'));

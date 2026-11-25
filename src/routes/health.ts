@@ -10,10 +10,12 @@ healthRouter.get('/health', (_req, res) => {
   });
 });
 
-healthRouter.get('/ready', (_req, res) => {
-  const ready = mongoose.connection.readyState === 1;
-  res.status(ready ? 200 : 503).json({
-    status: ready ? 'ready' : 'not_ready',
-    database: ready ? 'connected' : 'disconnected',
-  });
+healthRouter.get('/ready', async (_req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) throw new Error('Database not connected');
+    await mongoose.connection.db!.admin().ping();
+    res.status(200).json({ status: 'ready', database: 'connected' });
+  } catch {
+    res.status(503).json({ status: 'not_ready', database: 'disconnected' });
+  }
 });

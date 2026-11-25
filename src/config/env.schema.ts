@@ -81,6 +81,17 @@ export const envSchema = z
       }
     }
 
+    if (
+      env.NODE_ENV === 'production' &&
+      env.CORS_ORIGINS.split(',').some((origin) => origin.trim() === '*')
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['CORS_ORIGINS'],
+        message: 'wildcard origins are not allowed in production',
+      });
+    }
+
     if (env.NODE_ENV === 'production' && env.JWT_SECRET.startsWith('replace-with-')) {
       ctx.addIssue({
         code: 'custom',
