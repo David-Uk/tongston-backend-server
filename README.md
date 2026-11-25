@@ -93,6 +93,21 @@ For deterministic runs without an API key, set `AI_PROVIDER=mock`.
 
 > Token rewards use MongoDB transactions: use Atlas M0 or a local replica set. A standalone `mongod` will reject transactions.
 
+## Tokens and mock Web3
+
+| Endpoint                                                 | Purpose                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `GET /tokens/balance`                                    | Current token balance                                                     |
+| `GET /tokens/history?type=&page=&limit=`                 | Append-only ledger, newest first, filter by `EARN`/`CONVERT`/`WITHDRAW`   |
+| `POST /tokens/convert`                                   | Debit tokens and create a `CONFIRMED` mock conversion                     |
+| `POST /tokens/withdraw`                                  | Mark a confirmed conversion `WITHDRAWN` and write a `WITHDRAW` ledger row |
+| `GET /tokens/conversions`                                | List your conversions for the withdraw action                             |
+| `GET /admin/users`, `GET /admin/users/:id/token-history` | Admin user/balance and ledger views                                       |
+| `POST /admin/tokens/grant`                               | Admin-only system tokens (`source: SYSTEM`)                               |
+| `GET /admin/ledger/verify?userId=`                       | Recompute a user's hash chain and report integrity                        |
+
+Exchange rates are config-driven (`RATE_TOKENS_PER_MOCK_USDT`, `RATE_TOKENS_PER_MOCK_ETH`, `MIN_CONVERT_AMOUNT`). Convert and withdraw accept an optional `Idempotency-Key` header; a repeated key returns `409`. The mock chain client returns deterministic `0x`-prefixed 32-byte hashes, so a real adapter can replace it later. Every ledger row stores `balanceAfter` plus `prevHash`/`hash`; there are no update or delete routes.
+
 ## API documentation
 
 | URL                                  | What it is                                                       |
@@ -133,8 +148,9 @@ src/
   modules/ai/         AI runs, prompt versioning, orchestration, routers
   modules/auth/       User model, Zod schemas, service, router
   modules/content/    Content model, Zod schemas, repository, service, router
-  modules/tokens/     Token transaction model
+  modules/tokens/     Ledger/hash chain, conversions, rates, token and admin routers
   providers/ai/       OpenRouter and mock adapters behind one interface
+  providers/chain/    Mock smart-contract client behind one interface
   routes/             health and docs routers
   types/              Express request augmentation
   utils/              AppError classes, Pino logger

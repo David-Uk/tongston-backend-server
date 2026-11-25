@@ -10,7 +10,7 @@ import {
 import { ForbiddenError, NotFoundError } from '../../utils/AppError.js';
 import { UserModel, type UserRole } from '../auth/user.model.js';
 import type { ContentDto } from '../content/content.service.js';
-import { TokenTransactionModel } from '../tokens/token-transaction.model.js';
+import { appendLedgerEntry } from '../tokens/ledger.js';
 import { AiRunModel, type AiRun } from './ai-run.model.js';
 import type { ListAiRunsInput, SummarizeInputDto } from './ai.schema.js';
 import { buildPrompt, PROMPT_VERSION } from './prompt.js';
@@ -138,18 +138,16 @@ export async function summarizeContent(
       );
       if (!user) throw new NotFoundError('User not found');
 
-      await TokenTransactionModel.create(
-        [
-          {
-            userId: new Types.ObjectId(userId),
-            type: 'EARN',
-            source: 'AI_USAGE',
-            amount: tokensAwarded,
-            balanceAfter: user.tokenBalance,
-            referenceId: run._id,
-          },
-        ],
-        { session },
+      await appendLedgerEntry(
+        {
+          userId,
+          type: 'EARN',
+          source: 'AI_USAGE',
+          amount: tokensAwarded,
+          balanceAfter: user.tokenBalance,
+          referenceId: String(run._id),
+        },
+        session,
       );
 
       return {

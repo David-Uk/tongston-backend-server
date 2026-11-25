@@ -11,7 +11,10 @@ import { aiRunsRouter } from './modules/ai/ai-runs.router.js';
 import { createAiRouter } from './modules/ai/ai.router.js';
 import { authRouter } from './modules/auth/auth.router.js';
 import { contentRouter } from './modules/content/content.router.js';
+import { adminRouter } from './modules/tokens/admin.router.js';
+import { createTokensRouter } from './modules/tokens/tokens.router.js';
 import { createAiProvider } from './providers/ai/index.js';
+import { createChainClient } from './providers/chain/index.js';
 import { docsRouter } from './routes/docs.js';
 import { healthRouter } from './routes/health.js';
 import { logger } from './utils/logger.js';
@@ -76,6 +79,8 @@ export function createApp(config: Config): Express {
   app.use('/auth', authRouter);
   app.use('/content', contentRouter);
   app.use('/ai-runs', aiRunsRouter);
+  app.use('/tokens', createTokensRouter(config, createChainClient(config)));
+  app.use('/admin', adminRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

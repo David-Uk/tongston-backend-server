@@ -1,6 +1,6 @@
 /**
  * OpenAPI 3.1 rendering of ../api.md (repo root) — the spec is the source of truth.
- * Auth/health are live; the remaining groups describe the target contract.
+ * Auth, health, content, AI, tokens and admin are live; media/Web3 are planned.
  */
 const bearer = [{ bearerAuth: [] }];
 
@@ -49,7 +49,7 @@ export const openApiDocument = {
     title: 'T-World Module Service API',
     version: '0.1.0',
     description:
-      'Content, AI summarization, token rewards and mock Web3. Auth and health endpoints are live; the other groups describe the target contract from api.md and are implemented in later phases. All errors use the standard envelope: `{ error: { code, message, details, requestId } }`.',
+      'Content, AI summarization, token rewards and mock Web3. Auth, health, content, AI, token and admin endpoints are live; media and Web3 describe the target contract from api.md for later phases. All errors use the standard envelope: `{ error: { code, message, details, requestId } }`.',
   },
   servers: [
     {
@@ -62,8 +62,8 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Register, login and current user' },
     { name: 'Content', description: 'Content items and full-text search' },
     { name: 'AI', description: 'AI summarization via OpenRouter' },
-    { name: 'Tokens', description: 'Planned — Phase 4' },
-    { name: 'Admin', description: 'Planned — admin only' },
+    { name: 'Tokens', description: 'Token balance, hash-chained ledger and mock conversions' },
+    { name: 'Admin', description: 'Admin-only user, grant and ledger verification routes' },
     { name: 'Media', description: 'Planned — Phase 5' },
     { name: 'Web3', description: 'Planned — stretch' },
     { name: 'Operations', description: 'Health, readiness and these docs' },
@@ -178,6 +178,18 @@ export const openApiDocument = {
           amount: { type: 'integer' },
           balanceAfter: { type: 'integer' },
           referenceId: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Conversion: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          toAsset: { type: 'string', enum: ['MOCK_USDT', 'MOCK_ETH'] },
+          amount: { type: 'integer' },
+          convertedAmount: { type: 'string' },
+          status: { type: 'string', enum: ['PENDING', 'CONFIRMED', 'WITHDRAWN', 'FAILED'] },
+          txHashMock: { type: 'string' },
           createdAt: { type: 'string', format: 'date-time' },
         },
       },
@@ -470,7 +482,7 @@ export const openApiDocument = {
         responses: {
           200: response('Conversions', {
             type: 'array',
-            items: { $ref: '#/components/schemas/ConvertResponse' },
+            items: { $ref: '#/components/schemas/Conversion' },
           }),
           ...errors,
         },
