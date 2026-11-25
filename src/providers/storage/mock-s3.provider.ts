@@ -4,10 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import type { StorageProvider, StoredObject } from './storage.provider.js';
 
-// Vercel's filesystem is read-only except /tmp; local dev uses the project dir.
-const ROOT = process.env.VERCEL
-  ? path.join(os.tmpdir(), 'mock-s3')
-  : path.resolve(process.cwd(), 'tmp', 'mock-s3');
+// Hosted runtimes have a read-only app dir; local dev uses the project dir.
+const ROOT =
+  process.env.VERCEL || process.env.NODE_ENV === 'production'
+    ? path.join(os.tmpdir(), 'mock-s3')
+    : path.resolve(process.cwd(), 'tmp', 'mock-s3');
 
 const EXTENSIONS: Record<string, string> = {
   'image/png': '.png',
