@@ -21,8 +21,12 @@ export const envSchema = z
     JWT_EXPIRES_IN: z.string().min(1).default('1h'),
     BCRYPT_ROUNDS: z.coerce.number().int().min(4).max(15).default(12),
 
-    AI_PROVIDER: z.enum(['mock', 'real']).default('mock'),
-    AI_API_KEY: z.string().optional(),
+    AI_PROVIDER: z.enum(['mock', 'openrouter']).default('openrouter'),
+    OPENROUTER_BASE_URL: z.string().url().default('https://openrouter.ai/api/v1'),
+    OPENROUTER_MODEL: z.string().min(1).default('liquid/lfm-3-1.7b:free'),
+    OPENROUTER_API_KEY: z.string().optional(),
+    OPENROUTER_SITE_URL: z.string().url().default('http://localhost:4000'),
+    OPENROUTER_APP_NAME: z.string().min(1).default('T-World Module Service'),
     AI_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
     AI_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
     AI_MOCK_LATENCY_MS: z.coerce.number().int().min(0).default(1200),
@@ -55,11 +59,11 @@ export const envSchema = z
     AI_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
   })
   .superRefine((env, ctx) => {
-    if (env.AI_PROVIDER === 'real' && !env.AI_API_KEY) {
+    if (env.AI_PROVIDER === 'openrouter' && !env.OPENROUTER_API_KEY) {
       ctx.addIssue({
         code: 'custom',
-        path: ['AI_API_KEY'],
-        message: 'required when AI_PROVIDER=real',
+        path: ['OPENROUTER_API_KEY'],
+        message: 'required for OpenRouter (create one at https://openrouter.ai/keys)',
       });
     }
 

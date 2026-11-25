@@ -79,6 +79,20 @@ curl -H 'Authorization: Bearer <token>' http://localhost:4000/auth/me
 - Errors use one envelope: `{ "error": { "code", "message", "details", "requestId" } }`.
 - `POST /auth/register` creates a `user`; login is required afterwards to obtain a JWT.
 
+## AI provider (OpenRouter)
+
+`AI_PROVIDER=openrouter` is the default and calls OpenRouter's OpenAI-compatible `/api/v1/chat/completions` endpoint.
+
+1. Create an API key at <https://openrouter.ai/keys>.
+2. Set `OPENROUTER_API_KEY` in `.env` (required; the app refuses to boot without it).
+3. `OPENROUTER_BASE_URL` defaults to `https://openrouter.ai/api/v1`; `OPENROUTER_MODEL` defaults to the small free model `liquid/lfm-3-1.7b:free`. Browse other slugs at <https://openrouter.ai/models>. Optional `OPENROUTER_SITE_URL` / `OPENROUTER_APP_NAME` headers add app attribution on OpenRouter leaderboards.
+
+For deterministic runs without an API key, set `AI_PROVIDER=mock`.
+
+`POST /content/:id/ai/summarize` calls the provider with a timeout (`AI_TIMEOUT_MS`) and up to `AI_MAX_RETRIES` retries for transient errors. A success awards `TOKENS_PER_AI_RUN` tokens in one MongoDB transaction (balance, ledger row and `ai_runs` row commit together); timeouts and failures award **0** tokens and return a fallback response. The AI endpoint has a separate per-user limit (`AI_RATE_LIMIT_MAX`).
+
+> Token rewards use MongoDB transactions: use Atlas M0 or a local replica set. A standalone `mongod` will reject transactions.
+
 ## API documentation
 
 | URL                                  | What it is                                                       |
@@ -87,7 +101,7 @@ curl -H 'Authorization: Bearer <token>' http://localhost:4000/auth/me
 | `http://localhost:4000/openapi.json` | The raw OpenAPI 3.1 document                                     |
 | `../api.md`                          | The written contract the spec is generated from                  |
 
-The Scalar UI bundle is served by this app, so `/docs` and `/openapi.json` work fully offline. Auth and health endpoints are live; groups from Content onward describe the target contract and are implemented in later phases.
+The Scalar UI bundle is served by this app, so `/docs` and `/openapi.json` work fully offline. Auth, health, content and AI endpoints are live; the token, admin, media and Web3 groups describe the target contract for later phases.
 
 ## Scripts
 
@@ -113,11 +127,14 @@ src/
   app.ts              Express instance (no listen) — middleware wiring, testable
   server.ts           Boot: connect DB, listen, graceful shutdown
   config/             Zod env schema + config loader
-  db/                 Connection and seed script
+  db/                 Connection, seed and transaction helper
   docs/               OpenAPI 3.1 document
-  middleware/         request validation, auth/RBAC, rate limit, errors
+  middleware/         request validation, auth/RBAC, rate limits, errors
+  modules/ai/         AI runs, prompt versioning, orchestration, routers
   modules/auth/       User model, Zod schemas, service, router
   modules/content/    Content model, Zod schemas, repository, service, router
+  modules/tokens/     Token transaction model
+  providers/ai/       OpenRouter and mock adapters behind one interface
   routes/             health and docs routers
   types/              Express request augmentation
   utils/              AppError classes, Pino logger
@@ -131,3 +148,4 @@ Layering rule: `route → validate → controller → service → model`. Route 
 - **`/ready` returns 503** — MongoDB is unreachable; check `MONGODB_URI`, credentials and the Atlas IP allow-list.
 - **429 responses** — the global rate limit was hit; adjust `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` in `.env`.
 - **`/docs` is blank** — check the browser console; the page and its bundle are both served locally (`/scalar/standalone.js`), and `/openapi.json` contains the raw spec.
+- **AI summary returns `AI_FAILED` fallback** — check `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`. OpenRouter returns HTTP 402 when the account has insufficient credits; add credits, pick a `:free` model, or use `AI_PROVIDER=mock` for offline demos.

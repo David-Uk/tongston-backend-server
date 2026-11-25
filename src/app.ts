@@ -7,8 +7,11 @@ import { pinoHttp } from 'pino-http';
 import type { Config } from './config/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 import { createGlobalLimiter } from './middleware/rateLimit.js';
+import { aiRunsRouter } from './modules/ai/ai-runs.router.js';
+import { createAiRouter } from './modules/ai/ai.router.js';
 import { authRouter } from './modules/auth/auth.router.js';
 import { contentRouter } from './modules/content/content.router.js';
+import { createAiProvider } from './providers/ai/index.js';
 import { docsRouter } from './routes/docs.js';
 import { healthRouter } from './routes/health.js';
 import { logger } from './utils/logger.js';
@@ -67,9 +70,12 @@ export function createApp(config: Config): Express {
   app.use(express.json({ limit: '1mb' }));
   app.use(createGlobalLimiter(config));
 
+  // Mounted before /content so summarize authenticates only once.
+  app.use('/content/:id/ai', createAiRouter(createAiProvider(config), config));
   app.use(healthRouter);
   app.use('/auth', authRouter);
   app.use('/content', contentRouter);
+  app.use('/ai-runs', aiRunsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

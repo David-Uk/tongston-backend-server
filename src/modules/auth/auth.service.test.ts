@@ -9,6 +9,7 @@ beforeAll(() => {
     MONGODB_URI: 'mongodb://127.0.0.1:27017',
     MONGODB_DB_NAME: 't_world_test',
     JWT_SECRET: 'a-test-secret-that-is-definitely-long-enough',
+    AI_PROVIDER: 'mock',
   });
   resetConfigCache();
 });

@@ -7,6 +7,7 @@ const validEnv = {
   MONGODB_DB_NAME: 't_world_test',
   JWT_SECRET: 'a-test-secret-that-is-definitely-long-enough',
   CORS_ORIGINS: 'http://localhost:5173, http://localhost:3000',
+  OPENROUTER_API_KEY: 'test-openrouter-key',
 };
 
 describe('parseConfig', () => {
@@ -14,7 +15,7 @@ describe('parseConfig', () => {
     const config = parseConfig(validEnv);
 
     expect(config.PORT).toBe(4000);
-    expect(config.AI_PROVIDER).toBe('mock');
+    expect(config.AI_PROVIDER).toBe('openrouter');
     expect(config.TOKENS_PER_AI_RUN).toBe(5);
     expect(config.RATE_TOKENS_PER_MOCK_ETH).toBe(20000);
     expect(config.corsOrigins).toEqual(['http://localhost:5173', 'http://localhost:3000']);
@@ -27,9 +28,18 @@ describe('parseConfig', () => {
     );
   });
 
-  it('requires an API key when the real AI provider is selected', () => {
-    expect(() => parseConfig({ ...validEnv, AI_PROVIDER: 'real' })).toThrow(
-      /AI_API_KEY: required when AI_PROVIDER=real/,
+  it('uses the OpenRouter endpoint and validates its key', () => {
+    const config = parseConfig(validEnv);
+    expect(config.OPENROUTER_BASE_URL).toBe('https://openrouter.ai/api/v1');
+    expect(config.OPENROUTER_MODEL).toBe('liquid/lfm-3-1.7b:free');
+    expect(() => parseConfig({ ...validEnv, OPENROUTER_BASE_URL: 'not-a-url' })).toThrow(
+      /OPENROUTER_BASE_URL/,
     );
+    expect(() => parseConfig({ ...validEnv, OPENROUTER_API_KEY: '' })).toThrow(
+      /OPENROUTER_API_KEY/,
+    );
+    expect(() =>
+      parseConfig({ ...validEnv, AI_PROVIDER: 'mock', OPENROUTER_API_KEY: '' }),
+    ).not.toThrow();
   });
 });

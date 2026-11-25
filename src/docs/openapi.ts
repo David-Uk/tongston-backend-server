@@ -60,8 +60,8 @@ export const openApiDocument = {
   ],
   tags: [
     { name: 'Auth', description: 'Register, login and current user' },
-    { name: 'Content', description: 'Planned — Phase 2' },
-    { name: 'AI', description: 'Planned — Phase 3' },
+    { name: 'Content', description: 'Content items and full-text search' },
+    { name: 'AI', description: 'AI summarization via OpenRouter' },
     { name: 'Tokens', description: 'Planned — Phase 4' },
     { name: 'Admin', description: 'Planned — admin only' },
     { name: 'Media', description: 'Planned — Phase 5' },
@@ -335,7 +335,7 @@ export const openApiDocument = {
         tags: ['AI'],
         summary: 'Summarize content; award 5 tokens only on SUCCESS',
         description:
-          'Per-user rate limit applies. Timeout/fallback/failure return 200 with 0 tokens awarded and a status/reason flag.',
+          'Uses the configured OpenRouter model (AI_PROVIDER=openrouter, requires OPENROUTER_API_KEY); set AI_PROVIDER=mock for deterministic demos. Per-user rate limit applies. Timeout/fallback/failure return 200 with 0 tokens awarded and a status/reason flag.',
         security: bearer,
         parameters: [idParam('Content id (ObjectId)')],
         requestBody: {
