@@ -8,6 +8,11 @@ import { postmanCollection } from '../docs/postman.js';
 
 export const docsRouter = Router();
 
+/** Send the index route to the API reference. */
+docsRouter.get('/', (_req, res) => {
+  res.redirect('/docs');
+});
+
 // Serve Scalar's own UMD bundle locally so /docs needs no internet access.
 const localRequire = createRequire(import.meta.url);
 const scalarBrowserDir = join(dirname(localRequire.resolve('@scalar/api-reference')), 'browser');
